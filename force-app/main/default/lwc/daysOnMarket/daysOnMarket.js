@@ -84,7 +84,6 @@ export default class DaysOnMarket extends LightningElement {
     }
 
     disconnectedCallback() {
-        unsubscribe(this.subscription);
         this.subscription = null;
     }
 

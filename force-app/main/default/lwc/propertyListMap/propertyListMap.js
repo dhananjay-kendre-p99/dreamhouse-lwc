@@ -47,6 +47,9 @@ export default class PropertyListMap extends LightningElement {
     wiredProperties({ error, data }) {
         if (data) {
             this.properties = data.records;
+            this.properties.forEach((property) => {
+                property.formattedPrice = `$${property.Price__c}`;
+            });
             // Display properties on map
             this.displayProperties();
         } else if (error) {

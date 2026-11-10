@@ -53,6 +53,7 @@ export default class PropertyTileList extends LightningElement {
         this.maxPrice = filters.maxPrice;
         this.minBedrooms = filters.minBedrooms;
         this.minBathrooms = filters.minBathrooms;
+        this.pageNumber = 0;
     }
 
     handlePreviousPage() {

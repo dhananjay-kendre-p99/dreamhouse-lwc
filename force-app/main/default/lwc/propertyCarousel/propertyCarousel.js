@@ -81,7 +81,7 @@ export default class PropertyCarousel extends LightningElement {
                 const base64data = await this.blobToBase64(blob);
 
                 // Create file attached to record
-                await createFile({
+                createFile({
                     base64data: base64data,
                     filename: file.name,
                     recordId: this.recordId

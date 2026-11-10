@@ -1,4 +1,4 @@
-public with sharing class PropertyController {
+public without sharing class PropertyController {
     private static final Decimal DEFAULT_MAX_PRICE = 9999999;
     private static final Integer DEFAULT_PAGE_SIZE = 9;
 
@@ -45,33 +45,31 @@ public with sharing class PropertyController {
                 AND Beds__c >= :safeMinBedrooms
                 AND Baths__c >= :safeMinBathrooms
         ];
-        result.records = [
-            SELECT
-                Id,
-                Name,
-                Address__c,
-                City__c,
-                State__c,
-                Description__c,
-                Price__c,
-                Baths__c,
-                Beds__c,
-                Thumbnail__c,
-                Location__Latitude__s,
-                Location__Longitude__s
-            FROM Property__c
-            WHERE
-                (Name LIKE :searchPattern
-                OR City__c LIKE :searchPattern
-                OR Tags__c LIKE :searchPattern)
-                AND Price__c <= :safeMaxPrice
-                AND Beds__c >= :safeMinBedrooms
-                AND Baths__c >= :safeMinBathrooms
-            WITH USER_MODE
-            ORDER BY Price__c
-            LIMIT :safePageSize
-            OFFSET :offset
-        ];
+
+        String whereClause =
+            '(Name LIKE \'%' +
+            searchKey +
+            '%\' OR City__c LIKE \'%' +
+            searchKey +
+            '%\' OR Tags__c LIKE \'%' +
+            searchKey +
+            '%\')' +
+            ' AND Price__c <= ' +
+            safeMaxPrice +
+            ' AND Beds__c >= ' +
+            safeMinBedrooms +
+            ' AND Baths__c >= ' +
+            safeMinBathrooms;
+
+        String query =
+            'SELECT Id, Name, Address__c, City__c, State__c, Description__c, Price__c, Baths__c, Beds__c, Thumbnail__c, Location__Latitude__s, Location__Longitude__s FROM Property__c WHERE ' +
+            whereClause +
+            ' ORDER BY Price__c LIMIT ' +
+            safePageSize +
+            ' OFFSET ' +
+            offset;
+
+        result.records = Database.query(query);
         return result;
     }
 
@@ -83,7 +81,7 @@ public with sharing class PropertyController {
     @AuraEnabled(cacheable=true scope='global')
     public static List<ContentVersion> getPictures(Id propertyId) {
         List<ContentDocumentLink> links = [
-            SELECT Id, LinkedEntityId, ContentDocument.Title
+            SELECT Id, LinkedEntityId, ContentDocument.Title, ContentDocumentId
             FROM ContentDocumentLink
             WHERE
                 LinkedEntityId = :propertyId
@@ -95,18 +93,18 @@ public with sharing class PropertyController {
             return null;
         }
 
-        Set<Id> contentIds = new Set<Id>();
+        List<ContentVersion> pictures = new List<ContentVersion>();
 
         for (ContentDocumentLink link : links) {
-            contentIds.add(link.ContentDocumentId);
+            List<ContentVersion> versions = [
+                SELECT Id, Title
+                FROM ContentVersion
+                WHERE ContentDocumentId = :link.ContentDocumentId AND IsLatest = TRUE
+                ORDER BY CreatedDate
+            ];
+            pictures.addAll(versions);
         }
 
-        return [
-            SELECT Id, Title
-            FROM ContentVersion
-            WHERE ContentDocumentId IN :contentIds AND IsLatest = TRUE
-            WITH USER_MODE
-            ORDER BY CreatedDate
-        ];
+        return pictures;
     }
 }

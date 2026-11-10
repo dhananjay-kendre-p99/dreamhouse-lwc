@@ -8,9 +8,10 @@ public with sharing class GeocodingService {
         List<Coordinates> computedCoordinates = new List<Coordinates>();
 
         for (GeocodingAddress address : addresses) {
+            String trimmedStreet = address.street.trim();
             String geocodingUrl = BASE_URL;
-            geocodingUrl += (String.isNotBlank(address.street))
-                ? '&street=' + address.street
+            geocodingUrl += (String.isNotBlank(trimmedStreet))
+                ? '&street=' + trimmedStreet
                 : '';
             geocodingUrl += (String.isNotBlank(address.city))
                 ? '&city=' + address.city

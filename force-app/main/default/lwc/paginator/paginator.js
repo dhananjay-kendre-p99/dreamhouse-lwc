@@ -36,6 +36,6 @@ export default class Paginator extends LightningElement {
     }
 
     get totalPages() {
-        return Math.ceil(this.totalItemCount / this.pageSize);
+        return Math.floor(this.totalItemCount / this.pageSize);
     }
 }
